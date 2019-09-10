@@ -31,7 +31,9 @@ def add_census(row):
         except:
             return None 
     
-# def parse_row_string(row):
+
+def cluster_variables(all_variables, subset):
+    return np.array([all_variables[i].tolist() for i in range(subset[0], subset[1]+1)])
 
 
 def add_census_vars(row, var_names):
@@ -40,10 +42,7 @@ def add_census_vars(row, var_names):
     else:
         for i in range(len(var_names)):
             search_term = var_names[i][0]
-            try:
-                row.append(call_api(search_term, row))
-            except:
-                row.append(None)
+            row.append(call_api(search_term, row))
         return row
 
 
@@ -51,9 +50,9 @@ def add_census_vars(row, var_names):
 def call_api(search_term, row, key="2f321eb597c3d3e59dfa9aa2f694622639dee6fc"):
     tract, state, county = row[5], row[6], row[7]
     query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=tract:{}&in=state:{}%20county:{}&key={}".format(search_term, tract, state, county, key)
-    call = requests.get(query).text
-    clean_call = ast.literal_eval(call)
     try:
+        call = requests.get(query).text
+        clean_call = ast.literal_eval(call)
         isolated_value =  float(clean_call[1][1])
         return isolated_value
     except:
