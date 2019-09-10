@@ -1,4 +1,4 @@
-# import pyspark as ps    # for the pyspark suite
+import pyspark as ps    # for the pyspark suite
 import requests
 from bs4 import BeautifulSoup
 import numpy as np
@@ -61,14 +61,9 @@ def call_api(search_term, row, key="2f321eb597c3d3e59dfa9aa2f694622639dee6fc"):
 
 
 
-if __name__ == '__main__':
-    row = '1007,MA,42.3,-72.4,1'
-    rows = add_census(row)
-    tract, state, county = rows[5], rows[6], 15
-    key="2f321eb597c3d3e59dfa9aa2f694622639dee6fc"
-    search_term = 'DP03_0025E'
-    query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=tract:{}&in=state:{}%20county:{}&key={}".format(search_term, tract, state, county, key)
-    call = requests.get(query).text
+# if __name__ == '__main__':
+    # row = '1007,MA,42.3,-72.4,1'
+    # rows = add_census(row)
 
     # econ_var_names = read_variable_names('econ_var_names.csv')
     
@@ -78,8 +73,8 @@ if __name__ == '__main__':
     # # table = soup.find('table')
     # # census_var_names = parse_table_to_data(table)[:, 0:2]
 
-    # search_term = econ_var_names[0][0]
-    # called = call_api(search_term, rows)
+    # # search_term = econ_var_names[0][0]
+    # # called = call_api(search_term, rows)
     # called = add_census_vars(econ_var_names, rows)
 
 
