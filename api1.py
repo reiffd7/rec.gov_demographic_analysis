@@ -79,6 +79,3 @@ if __name__ == '__main__':
     # search_term = econ_var_names[0][0]
     # called = call_api(search_term, rows)
     # called = add_census_vars(econ_var_names, rows)
-
-
-
