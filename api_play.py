@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import numpy as np
 import censusgeocode as cg 
+import pandas as pd
 import csv
 import json
 import ast
@@ -102,11 +103,13 @@ if __name__ == '__main__':
     row = [1007, 'MA', 42.3, -72.4, 1, '820204', '25', '015']
     # called = call_api(search_term, rows)
 
-    called = command_center(False, row, health)
+    called = command_center(False, row, commute)
     national_health = command_center(True, 0, health)
     national_industry = command_center(True, 0, industry)
     national_commute = command_center(True, 0, commute)
-    nationa_income_benefits = command_center(True, 0, income_benefits)
+    national_income_benefits = command_center(True, 0, income_benefits)
+    national_data = np.array(national_health + national_industry + national_commute + national_income_benefits)
+    pd.DataFrame(national_data).to_csv("data/national_data.csv")
     # search_term = 'DP03_0096PE'
     # call = national_call_api(search_term)
 
