@@ -36,17 +36,22 @@ def add_census(row):
 def cluster_variables(all_variables, subset):
     return np.array([all_variables[i].tolist() for i in range(subset[0], subset[1]+1)])
 
-def add_census_vars(row, var_names):
-    if row == None:
-        return row
-    else:
+def command_center(national, row, var_names):
+    results = []
+    if national:
         for i in range(len(var_names)):
             search_term = var_names[i][0]
-            try:
-                row.append(call_api(search_term, row))
-            except:
-                row.append(None)
-        return row
+            results.append([var_names[i][1], (national_call_api(search_term))])
+        return results
+    else:    
+        if row == None:
+            return row
+        else:
+            for i in range(len(var_names)):
+                search_term = var_names[i][0]
+                results.append((i, var_names[i][1], (call_api(search_term, row))))
+            return results
+
 
 
 
@@ -61,6 +66,14 @@ def call_api(search_term, row, key="2f321eb597c3d3e59dfa9aa2f694622639dee6fc"):
     except:
         return None 
 
+def national_call_api(search_term, key="2f321eb597c3d3e59dfa9aa2f694622639dee6fc"):
+    query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=us:1".format(search_term)
+    call = requests.get(query).text
+    clean_call = ast.literal_eval(call)
+    isolated_value =  float(clean_call[1][1])
+    return isolated_value
+  
+
 
 
 if __name__ == '__main__':
@@ -69,12 +82,16 @@ if __name__ == '__main__':
     # tract, state, county = rows[5], rows[6], 15
     # key="2f321eb597c3d3e59dfa9aa2f694622639dee6fc"
     # search_term = 'DP03_0025E'
-    # query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=tract:{}&in=state:{}%20county:{}&key={}".format(search_term, tract, state, county, key)
+    # query = "https:;//api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=tract:{}&in=state:{}%20county:{}&key={}".format(search_term, tract, state, county, key)
     # call = requests.get(query).text
 
     econ_var_names = read_variable_names('data/econ_var_names.csv')
     econ_clusters = {'Industry': (31, 43), 'Commute': (17, 22), 'Income_Benefits': (50, 59), 'Health_Insurance': (94, 96)}
     industry = cluster_variables(econ_var_names, econ_clusters['Industry'])
+    health = cluster_variables(econ_var_names, econ_clusters['Health_Insurance'])
+    commute = cluster_variables(econ_var_names, econ_clusters['Commute'])
+    income_benefits = cluster_variables(econ_var_names, econ_clusters['Income_Benefits'])
+
     # ## Census Variable Names
     # # url = requests.get("https://api.census.gov/data/2017/acs/acs5/profile/variables.html").text
     # # soup = BeautifulSoup(url, "html.parser")
@@ -82,8 +99,16 @@ if __name__ == '__main__':
     # # census_var_names = parse_table_to_data(table)[:, 0:2]
 
     # search_term = econ_var_names[0][0]
+    row = [1007, 'MA', 42.3, -72.4, 1, '820204', '25', '015']
     # called = call_api(search_term, rows)
-    # called = add_census_vars(econ_var_names, rows)
+
+    called = command_center(False, row, health)
+    national_health = command_center(True, 0, health)
+    national_industry = command_center(True, 0, industry)
+    national_commute = command_center(True, 0, commute)
+    nationa_income_benefits = command_center(True, 0, income_benefits)
+    # search_term = 'DP03_0096PE'
+    # call = national_call_api(search_term)
 
 
 
