@@ -16,14 +16,14 @@ def parse_table_to_data(table):
 
 
 def filter_subset_data(census_var_names, subset):
-    econ_vars = census_var_names[census_var_names[:,2] == subset]
-    return econ_vars
+    subset_vars = census_var_names[census_var_names[:,2] == subset]
+    return subset_vars
 
 def filter_percentages(census_vars):
     result = []
     for i in range(len(census_vars)):
-        if 'Percent Estimate' in econ_vars[i][1]:
-            result.append([econ_vars[i][0], econ_vars[i][1]])
+        if 'Percent Estimate' in census_vars[i][1]:
+            result.append([census_vars[i][0], census_vars[i][1]])
     return np.array(result)
 
 def var_names_to_file(var_names, file_name):
@@ -39,9 +39,9 @@ if __name__ == '__main__':
     table = soup.find('table')
     census_var_names = parse_table_to_data(table)[:, 0:3]
 
-    subset = 'SELECTED ECONOMIC CHARACTERISTICS'
-    econ_vars = filter_subset_data(census_var_names, subset)
-    econ_percent_vars = filter_percentages(econ_vars)
+    subset = 'SELECTED SOCIAL CHARACTERISTICS IN THE UNITED STATES'
+    social_vars = filter_subset_data(census_var_names, subset)
+    social_percent_vars = filter_percentages(social_vars)
 
-    var_names_to_file(econ_percent_vars, 'econ_var_names.csv')
+    var_names_to_file(social_percent_vars, 'social_var_names.csv')
 
