@@ -39,9 +39,16 @@ if __name__ == '__main__':
     table = soup.find('table')
     census_var_names = parse_table_to_data(table)[:, 0:3]
 
-    subset = 'SELECTED SOCIAL CHARACTERISTICS IN THE UNITED STATES'
-    social_vars = filter_subset_data(census_var_names, subset)
-    social_percent_vars = filter_percentages(social_vars)
+    subset = 'ACS DEMOGRAPHIC AND HOUSING ESTIMATES'
+    demographic_vars = filter_subset_data(census_var_names, subset)
+    demographic_percent_vars = filter_percentages(demographic_vars)
 
-    var_names_to_file(social_percent_vars, 'social_var_names.csv')
+    for i, elem in enumerate(demographic_percent_vars):
+        print(i, elem)
+
+    social_clusters = {'Internet': (150, 151), 'Language': (111, 120), 'Education': (59, 67), 'Veteran_Status': (69, 69)}
+
+    demo_clusters = {'Age': (5, 17), 'Gender': (1, 2), 'Race': (36, 56), 'Latino': (71, 74)}
+
+    # var_names_to_file(demographic_percent_vars, 'demo_var_names.csv')
 
