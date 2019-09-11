@@ -103,7 +103,7 @@ if __name__ == '__main__':
     row = [1007, 'MA', 42.3, -72.4, 1, '820204', '25', '015']
     # called = call_api(search_term, rows)
 
-    called = command_center(False, row, commute)
+    called = command_center(False, row, income_benefits)
     national_health = command_center(True, 0, health)
     national_industry = command_center(True, 0, industry)
     national_commute = command_center(True, 0, commute)
