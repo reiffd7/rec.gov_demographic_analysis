@@ -48,6 +48,7 @@ if __name__ == '__main__':
 
     social_clusters = {'Internet': (150, 151), 'Language': (111, 120), 'Education': (59, 67), 'Veteran_Status': (69, 69)}
 
-    demo_clusters = {'Age': (5, 17), }
-    # var_names_to_file(social_percent_vars, 'social_var_names.csv')
+    demo_clusters = {'Age': (5, 17), 'Gender': (1, 2), 'Race': (36, 56), 'Latino': (71, 74)}
+
+    # var_names_to_file(demographic_percent_vars, 'demo_var_names.csv')
 
