@@ -20,8 +20,8 @@ def clean_data(frame, term=-666666666.0):
     return frame
 
 
-def clean_columns(frame, cluster):
-    frame = frame.rename(columns={cluster[i-8][1]: cluster[i-8][1].split('!!')[3].replace(' ', '_') for i in range(8, 8+len(cluster))})
+def clean_columns(frame, cluster, index):
+    frame = frame.rename(columns={cluster[i-8][1]: cluster[i-8][1].split('!!')[index].replace(' ', '_') for i in range(8, 8+len(cluster))})
     return frame
 
 
@@ -82,7 +82,7 @@ class Grapher(object):
             isolated_value : (float) value gathered from query 
         
         '''
-        query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=us:1".format(search_term)
+        query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=us:1&key={}".format(search_term, key)
         call = requests.get(query).text
         clean_call = ast.literal_eval(call)
         isolated_value =  float(clean_call[1][1])
@@ -98,7 +98,7 @@ class Grapher(object):
         result = []
         for state in states:
             try:
-                query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}".format(search_term, state)
+                query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}&key={}".format(search_term, state, key)
                 print('querrying')
                 call = requests.get(query).text
                 print('cleaning')
@@ -127,8 +127,9 @@ class Grapher(object):
             plt.show()
         else:
             national_mean = self._national_means()
-            for i in range(9, len(self.data.columns)):
-                self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i-8), self.data.iloc[:, i], self.data.columns[i], national_mean[i-9])
+            print(national_mean)
+            for i in range(0, len(self.data.columns)):
+                self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i+1), self.data.iloc[:, i], self.data.columns[i], national_mean[i])
             plt.savefig(self.fname)
             plt.show()
 
@@ -138,36 +139,45 @@ class Grapher(object):
         new_column = column[~np.isnan(column)]
         ax.hist(new_column, bins=100)
         ax.axvline(national, color='red')
-        # ax.set_title(name, fontsize = 12)
+        ax.set_title(name, fontsize = 12)
         # ax.set_ylabel('Frequency')
 
     def _plot_hypo_test(self, ax, null_sample):
-        us_dist = np.array(null_sample)
-        print(us_dist)
+        us_sample = np.array(null_sample)
+        print(us_sample)
         new_column = self.data[~np.isnan(self.data)]
 
         samp_mean = np.mean(new_column.to_numpy())
-        samp_std = np.std(new_column.to_numpy())/len(new_column)
+        samp_std = np.std(new_column.to_numpy())/np.sqrt(len(new_column))
 
-        us_mean = np.mean(us_dist)
-        us_std = np.std(us_dist)/len(us_dist)
+        us_mean = np.mean(us_sample)
+        us_std = np.std(us_sample)/np.sqrt(len(us_sample))
 
         null_dist = stats.norm(loc = us_mean, scale = us_std)
         samp_dist = stats.norm(loc = samp_mean, scale = samp_std)
         lower = null_dist.ppf(0.025)
         upper = null_dist.ppf(0.975)
         diff = 2*np.absolute(us_mean-samp_mean)
-        x_values = np.linspace((us_mean - (diff)), (us_mean + (diff)), 250)
-        null_pdf = null_dist.pdf(x_values)
-        ax.plot(x_values, null_pdf)
-        ax.axvline(samp_mean, color='red', linestyle= '--', linewidth=1, alpha = 0.6)
-        ax.axvline(lower, color='green', linestyle= '--', linewidth=1, alpha = 0.8)
-        ax.axvline(upper, color='green', linestyle= '--', linewidth=1, alpha = 0.8)
-        ax.set_title(self.data.name)
+        us_x_values = np.linspace((us_mean - (10*us_std)), (us_mean + (10*us_std)), 250)
+        samp_x_values = np.linspace((samp_mean - (10*samp_std)), (samp_mean + (10*samp_std)), 250)
+        null_pdf = null_dist.pdf(us_x_values)
+        samp_pdf = samp_dist.pdf(samp_x_values)
         cdf_calc = null_dist.cdf(samp_mean)
-        p_value = 1 - cdf_calc
-        print(p_value)
-        # pass
+        p_value = round((cdf_calc), 2)
+        p_string = "p_value = {}".format(p_value)
+        ax.plot(us_x_values, null_pdf, label = 'Null Distribution (entire US)', color = 'red')
+        ax.plot(samp_x_values, samp_pdf, label = 'Sample Distribution', color = 'blue')
+        ax.axvline(samp_mean, color='red', linestyle= '--', linewidth=1)
+        ax.axvline(lower, color='green', linestyle= '--', linewidth=1)
+        ax.axvline(upper, color='green', linestyle= '--', linewidth=1)
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        ax.text(0.7, 0.6, p_string, transform=ax.transAxes, fontsize=14,verticalalignment='top', bbox=props)
+        ax.set_xlabel('Percentage of the Population')
+        ax.set_ylabel('Probability Density')
+        ax.legend()
+        ax.set_title(self.data.name + ' Hypothesis Test')
+     
+    
 
 
 
@@ -182,6 +192,7 @@ if __name__ == '__main__':
     internet_data = pd.read_csv('data/mesa_internet_data.csv')
     age_data = pd.read_csv('data/ohaver_age_data.csv')
     gender_data = pd.read_csv('data/ohaver_gender_data.csv')
+    race_data = pd.read_csv('data/ohaver_race_data.csv')
 
     econ_df = pd.read_csv('data/econ_var_names.csv')
     social_df = pd.read_csv('data/social_var_names.csv')
@@ -189,6 +200,7 @@ if __name__ == '__main__':
     econ_var_names = econ_df.to_numpy()
     social_var_names = social_df.to_numpy()
     demo_var_names = demo_df.to_numpy()
+    
     
     ## Census Variable Clusters
     econ_clusters = {'Industry': (31, 43), 'Commute': (17, 22), 'Income_Benefits': (50, 59), 'Health_Insurance': (94, 96)}
@@ -217,19 +229,27 @@ if __name__ == '__main__':
     internet_data = clean_data(internet_data)
     age_data = clean_data(age_data)
     gender_data = clean_data(gender_data)
+    race_data = clean_data(race_data)
 
-    health_data = clean_columns(health_data, health)
-    industry_data = clean_columns(industry_data, industry)
-    commute_data = clean_columns(commute_data, commute)
-    income_data = clean_columns(income_data, income_benefits)
-    vet_data = clean_columns(vet_data, vet_status)
-    internet_data = clean_columns(internet_data, internet)
-    age_data = clean_columns(age_data, age)
-    gender_data = clean_columns(gender_data, gender)
+    health_data = clean_columns(health_data, health, 3)
+    industry_data = clean_columns(industry_data, industry, 3)
+    commute_data = clean_columns(commute_data, commute, 3)
+    income_data = clean_columns(income_data, income_benefits, 3)
+    vet_data = clean_columns(vet_data, vet_status, 3)
+    internet_data = clean_columns(internet_data, internet, 3)
+    age_data = clean_columns(age_data, age, 3)
+    gender_data = clean_columns(gender_data, gender, 3)
+    race_data = clean_columns(race_data, race, 4)
 
     ## Graph
-    graph_obj = Grapher(True, gender_data.iloc[:, 9], gender[0], 'mesa_viz/hypothesis_test.png', 1, 1, 10, 10)
+    graph_obj = Grapher(True, commute_data.iloc[:, 12], commute[3], 'mesa_viz/hypothesis_test_public_transportation.png', 1, 1, 10, 10)
     graph = graph_obj.plot_cluster()
+
+
+#     [48.5 52.3 49.7 49.1 49.7 50.2 48.8 48.4 47.4 48.9 48.7 50.2 50.1 49.1
+#  49.3 49.6 49.8 49.3 48.9 48.9 48.5 48.5 49.2 49.8 48.5 49.1 50.3 49.8
+#  50.2 49.5 48.8 49.5 48.5 48.7 51.3 49.  49.6 49.5 48.9 48.5 48.6 50.3
+#  48.8 49.7 50.3 49.3 49.2 49.9 49.4 49.7 51.1]
 
 
     # states = ["%.2d" % i for i in range(1, 57)]
@@ -238,21 +258,21 @@ if __name__ == '__main__':
     # states.remove('14')
     # states.remove('43')
     # states.remove('52')
-    result = []
-    for state in states:
-        try:
-            print("trying query")
-            query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}".format(gender[0][0], state)
-            print("trying call")
-            call = requests.get(query).text
-            print("trying clean call")
-            clean_call = ast.literal_eval(call)
-            print("trying isolated_value")
-            isolated_value =  float(clean_call[1][1])
-            print(state, isolated_value)
-            result.append(isolated_value)
-        except:
-            import pdb; pdb.set_trace()
+    # result = []
+    # for state in states:
+    #     try:
+    #         print("trying query")
+    #         query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}".format(gender[0][0], state)
+    #         print("trying call")
+    #         call = requests.get(query).text
+    #         print("trying clean call")
+    #         clean_call = ast.literal_eval(call)
+    #         print("trying isolated_value")
+    #         isolated_value =  float(clean_call[1][1])
+    #         print(state, isolated_value)
+    #         result.append(isolated_value)
+    #     except:
+    #         import pdb; pdb.set_trace()
 
 
 
