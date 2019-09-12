@@ -12,15 +12,44 @@ plt.style.use('fivethirtyeight')
 
 
 def cluster_variables(all_variables, subset):
-    return np.array([all_variables[i].tolist() for i in range(subset[0], subset[1]+1)])
+    '''
+        Args:
+            all_variables : array of all census variables to be divided into subsets
+            subset: tuple specificying which rows of all variables to cluster
+
+        Returns: 
+            cluster : array of census variables in the subset
+        
+        '''
+    cluster = np.array([all_variables[i].tolist() for i in range(subset[0], subset[1]+1)])
+    return cluster
 
 def clean_data(frame, term=-666666666.0):
+    '''
+        Args:
+            frame : dataframe to be cleaned
+            term (int): specifies which value should removed from each column
+
+        Returns: 
+            frame : dataframe with term removed from each column
+        
+        '''
     for i in frame.columns:
         frame = frame[~(frame[i] == term)]
     return frame
 
 
 def clean_columns(frame, cluster, index):
+    '''
+        Args:
+            frame : dataframe to be cleaned
+            cluster: array of variables corresponding to frame's columns
+            index (int): specifies which index of the variable name found in cluster we want to rename each column
+
+        Returns: 
+            frame : dataframe with renamed columns 
+        
+        '''
     frame = frame.rename(columns={cluster[i-8][1]: cluster[i-8][1].split('!!')[index].replace(' ', '_') for i in range(8, 8+len(cluster))})
     return frame
 
@@ -28,22 +57,22 @@ def clean_columns(frame, cluster, index):
 class Grapher(object):
     '''
     Args:
-        hypo_test: (bool) do we want to do a hypothesis test?
+        hypo_test (bool): do we want to do a hypothesis test?
         
         data: Pandas dataframe to be graphed or pandas series if we are graphing a hypothesis test
 
         cluster: array of variable names that are going to be graphed. Used to make call to national api to get the national mean of each census variable within a census cluster
                 one variable name if we are graphing a hypothesis test
 
-        fname: (str) name of file of the graph that will be saved
+        fname (str): name of file of the graph that will be saved
 
-        fig_rows: (int) number of rows in the subplot for each census variable
+        fig_rows (int): number of rows in the subplot for each census variable
 
-        fig_cols: (int) number of columns in the subplot for each census variable
+        fig_cols (int): number of columns in the subplot for each census variable
 
-        size_x: (int) x component of the figure size
+        size_x (int): x component of the figure size
 
-        size_y: (int) y component of the figure size
+        size_y (int): y component of the figure size
 
     '''
     
@@ -76,10 +105,10 @@ class Grapher(object):
     def _national_call_api(self, search_term, key="259ba8642bd19b70be7abaee303575bb2435f9e3"):
         '''
         Args:
-            search_term : (str) name of census variable to be queried 
+            search_term (str): name of census variable to be queried 
 
         Returns: 
-            isolated_value : (float) value gathered from query 
+            isolated_value (float): value gathered from query 
         
         '''
         query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=us:1&key={}".format(search_term, key)
@@ -89,6 +118,9 @@ class Grapher(object):
         return isolated_value
 
     def _national_distribution(self, search_term, key="259ba8642bd19b70be7abaee303575bb2435f9e3"):
+         '''
+        We use an array of states to query the census api on a given search term and return the whole distribution
+        '''
         states = ["%.2d" % i for i in range(1, 57)]
         states.remove('03')
         states.remove('07')
@@ -114,10 +146,10 @@ class Grapher(object):
         
     def plot_cluster(self):
         '''
-        We use basically all of the class attributes here to call _national_mean, plot each census variable, and save the graph. 
-        Nothing is returned.
+        We use basically all of the class attributes here to either plot histograms for a cluster or a hypothesis test for one census variable
+        If we plot a hyothesis test, we will have to find a national distribution.
+        If we plot histograms, we will have to call national means to get the national mean for each census variable
         '''
-        
         fig = plt.figure(figsize=(self.size_x, self.size_y))
         if self.hypo_test:
             search_term = self.cluster[0]
@@ -143,6 +175,10 @@ class Grapher(object):
         # ax.set_ylabel('Frequency')
 
     def _plot_hypo_test(self, ax, null_sample):
+        '''
+        We use the null_sample to find the null_distribution and self.data fo find the sample_distribution
+        Both distributions are plotted and the p-value is found and also plotted.
+        '''
         us_sample = np.array(null_sample)
         print(us_sample)
         new_column = self.data[~np.isnan(self.data)]
@@ -163,7 +199,7 @@ class Grapher(object):
         null_pdf = null_dist.pdf(us_x_values)
         samp_pdf = samp_dist.pdf(samp_x_values)
         cdf_calc = null_dist.cdf(samp_mean)
-        p_value = round((cdf_calc), 2)
+        p_value = round((1 - cdf_calc), 2)
         p_string = "p_value = {}".format(p_value)
         ax.plot(us_x_values, null_pdf, label = 'Null Distribution (entire US)', color = 'red')
         ax.plot(samp_x_values, samp_pdf, label = 'Sample Distribution', color = 'blue')
@@ -242,75 +278,7 @@ if __name__ == '__main__':
     race_data = clean_columns(race_data, race, 4)
 
     ## Graph
-    graph_obj = Grapher(True, commute_data.iloc[:, 12], commute[3], 'mesa_viz/hypothesis_test_public_transportation.png', 1, 1, 10, 10)
+    graph_obj = Grapher(True, commute_data.iloc[:, 11], commute[2], 'mesa_viz/hypothesis_test_public_transportation.png', 1, 1, 10, 10)
     graph = graph_obj.plot_cluster()
-
-
-#     [48.5 52.3 49.7 49.1 49.7 50.2 48.8 48.4 47.4 48.9 48.7 50.2 50.1 49.1
-#  49.3 49.6 49.8 49.3 48.9 48.9 48.5 48.5 49.2 49.8 48.5 49.1 50.3 49.8
-#  50.2 49.5 48.8 49.5 48.5 48.7 51.3 49.  49.6 49.5 48.9 48.5 48.6 50.3
-#  48.8 49.7 50.3 49.3 49.2 49.9 49.4 49.7 51.1]
-
-
-    # states = ["%.2d" % i for i in range(1, 57)]
-    # states.remove('03')
-    # states.remove('07')
-    # states.remove('14')
-    # states.remove('43')
-    # states.remove('52')
-    # result = []
-    # for state in states:
-    #     try:
-    #         print("trying query")
-    #         query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}".format(gender[0][0], state)
-    #         print("trying call")
-    #         call = requests.get(query).text
-    #         print("trying clean call")
-    #         clean_call = ast.literal_eval(call)
-    #         print("trying isolated_value")
-    #         isolated_value =  float(clean_call[1][1])
-    #         print(state, isolated_value)
-    #         result.append(isolated_value)
-    #     except:
-    #         import pdb; pdb.set_trace()
-
-
-
-
-
-
-
-    # income_data = income_data.rename(columns={income_data.columns[i].replace('$', '') for i in range(9, 9+len(income_benefits))})
-
-    # plot_cluster(internet, internet_data, 'viz/internet_viz.png', 1, 2, 20, 7)
-
-    # fig = plt.figure(figsize=(20, 12))
-    # for i in range(9, len(income_data.columns)):
-    #     plot_hist(fig.add_subplot(5, 2, i-8), income_data.iloc[:, i], income_data.columns[i])
-    # plt.savefig('viz/income_viz.png')
-    # plt.show()
-
-    # x = income_data.iloc[:, 13]
-    # mean = np.mean(x.to_numpy())
-    # std = np.std(x.to_numpy())/(np.sqrt(len(x)))
-    # dist = stats.norm(loc = mean, scale = std)
-    # x_vals = np.linspace(10.4, 11.4, 250)
-    # pdf = dist.pdf(x_vals)
-
-    # means = []
-    # for i in range(1000):
-    #     sample = np.random.choice(x, size=len(x), replace=True)
-    #     means.append(np.mean(sample))
-
-
-    # fig = plt.figure(figsize=(10, 10))
-    # ax = fig.add_subplot(1, 1,1)
-    # ax.hist(means, bins = 100)
-    # ax.plot(x_vals, pdf)
-    # plt.show()
-
-
-
-    
 
 

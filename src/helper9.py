@@ -14,6 +14,12 @@ import math
 
 
 def parse_rows(row):
+     """
+    Input:
+        row (str): string of a row from textfile read into the rdd 
+    Output:
+        (list) : list representation of a row with only the columns we want for this project
+    """
     row_list = row.split(',')
     row_list = [i.replace('"', '') for i in row_list]
     try:
@@ -23,6 +29,12 @@ def parse_rows(row):
 
 
 def caster(row):
+    """
+    Input:
+        row (list): row in list form
+    Output:
+        (list) : row in list form but with each column casted to the types we want
+    """
     if row == None:
         return None
     else:
@@ -36,6 +48,12 @@ def caster(row):
 
     
 def state_filter(row):
+     """
+    Input:
+        row (list): row in list form
+    Output:
+        (list) : only the rows where the site is in Colorado 
+    """
     if row == None:
         return row
     else:
@@ -45,6 +63,12 @@ def state_filter(row):
             return None
         
 def cust_country_filter(row):
+     """
+    Input:
+        row (list): row in list form
+    Output:
+        (list) : only the rows where the customer is from the USA
+    """
     if row == None:
         return row
     else:
@@ -54,6 +78,12 @@ def cust_country_filter(row):
             return None
 
 def clean_zips(row):
+     """
+    Input:
+        row (list): row in list form
+    Output:
+        (list) : row in list form, the zipcode column now has single zipcodes (not hyphened)
+    """
     if row == None:
         return row
     else:
@@ -61,6 +91,12 @@ def clean_zips(row):
         return row
 
 def five_zips(row):
+    """
+    Input:
+        row (list): row in list form
+    Output:
+        (list) : only the rows where the customer's zipcode is 5 digits
+    """
     if row == None:
         return row
     else:
@@ -71,6 +107,12 @@ def five_zips(row):
     
 
 def add_coords(row):
+    """
+    Input:
+        row (list): row in list form
+    Output:
+        (list) : row in list form with customer's coordinates
+    """
     if row == None:
         return row
     else:
@@ -82,18 +124,16 @@ def add_coords(row):
             row.append(simple_zipcode.to_dict()['lat'])
             row.append(simple_zipcode.to_dict()['lng'])
             return row
-#         nomi = pgeocode.Nominatim('us')
-#         query = nomi.query_postal_code(str(row[8]))
-#         if math.isnan(round(query['latitude'], 2)):
-#             return None 
-#         else:
-#             row.append(round(query['latitude'], 2))
-#             row.append(round(query['longitude'], 2))
-#             return row
-   
+
     
     
 def distance(row):
+    """
+    Input:
+        row (list): row in list form
+    Output:
+        (list) : row in list form with distance from the customer's location to the site 
+    """
     if row == None:
         return row
     else:

@@ -54,6 +54,15 @@ def site_selector(site, df):
 
 
 def all_sites_mapper(df, size_metric, factor, color):
+     """
+    Input: 
+        df (dataframe): pandas dataframe characterizing all sites in Colorado
+        size_metric (str): column name from the df specifying which metric we want to base the radius of the markers on
+        factor (int): how large do we want the largest marker to be?
+        color (str): color of the markers
+    Output:
+        folium map centered on Colorado
+    """
     map_osm = folium.Map(location=[39, -105.547222], zoom_start=7)
 
     df.apply(lambda row:folium.CircleMarker(location=[row["FacLat"], row["FacLong"]], 
