@@ -5,6 +5,8 @@ from scipy import stats
 import math
 import requests
 import ast
+import random
+from scipy import stats
 
 plt.style.use('fivethirtyeight')
 
@@ -26,9 +28,12 @@ def clean_columns(frame, cluster):
 class Grapher(object):
     '''
     Args:
-        data: Pandas dataframe to be graphed
+        hypo_test: (bool) do we want to do a hypothesis test?
+        
+        data: Pandas dataframe to be graphed or pandas series if we are graphing a hypothesis test
 
         cluster: array of variable names that are going to be graphed. Used to make call to national api to get the national mean of each census variable within a census cluster
+                one variable name if we are graphing a hypothesis test
 
         fname: (str) name of file of the graph that will be saved
 
@@ -39,9 +44,11 @@ class Grapher(object):
         size_x: (int) x component of the figure size
 
         size_y: (int) y component of the figure size
+
     '''
     
-    def __init__(self, data, cluster, fname, fig_rows, fig_cols, size_x, size_y):
+    def __init__(self, hypo_test, data, cluster, fname, fig_rows, fig_cols, size_x, size_y):
+        self.hypo_test = hypo_test
         self.data = data
         self.cluster = cluster
         self.fname = fname
@@ -49,8 +56,8 @@ class Grapher(object):
         self.fig_cols = fig_cols
         self.size_x = size_x
         self.size_y = size_y 
-
-    def _national_vars(self):
+        
+    def _national_means(self):
         '''
         Args:
             self.cluster : array of census variable names that are going to be graphed
@@ -66,7 +73,7 @@ class Grapher(object):
         return results
 
     
-    def _national_call_api(self, search_term, key="2f321eb597c3d3e59dfa9aa2f694622639dee6fc"):
+    def _national_call_api(self, search_term, key="259ba8642bd19b70be7abaee303575bb2435f9e3"):
         '''
         Args:
             search_term : (str) name of census variable to be queried 
@@ -81,18 +88,49 @@ class Grapher(object):
         isolated_value =  float(clean_call[1][1])
         return isolated_value
 
+    def _national_distribution(self, search_term, key="259ba8642bd19b70be7abaee303575bb2435f9e3"):
+        states = ["%.2d" % i for i in range(1, 57)]
+        states.remove('03')
+        states.remove('07')
+        states.remove('14')
+        states.remove('43')
+        states.remove('52')
+        result = []
+        for state in states:
+            try:
+                query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}".format(search_term, state)
+                print('querrying')
+                call = requests.get(query).text
+                print('cleaning')
+                clean_call = ast.literal_eval(call)
+                print('isolating')
+                isolated_value =  float(clean_call[1][1])
+                print(state, isolated_value)
+                result.append(isolated_value)
+            except:
+                import pdb; pdb.set_trace()
+        return result
+
         
     def plot_cluster(self):
         '''
         We use basically all of the class attributes here to call _national_mean, plot each census variable, and save the graph. 
         Nothing is returned.
         '''
-        national_mean = self._national_vars()
+        
         fig = plt.figure(figsize=(self.size_x, self.size_y))
-        for i in range(9, len(self.data.columns)):
-            self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i-8), self.data.iloc[:, i], self.data.columns[i], national_mean[i-9])
-        plt.savefig(self.fname)
-        plt.show()
+        if self.hypo_test:
+            search_term = self.cluster[0]
+            null_sample = self._national_distribution(search_term)
+            self._plot_hypo_test(fig.add_subplot(self.fig_rows, self.fig_cols, 1), null_sample)
+            plt.savefig(self.fname)
+            plt.show()
+        else:
+            national_mean = self._national_means()
+            for i in range(9, len(self.data.columns)):
+                self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i-8), self.data.iloc[:, i], self.data.columns[i], national_mean[i-9])
+            plt.savefig(self.fname)
+            plt.show()
 
 
     def _plot_hist(self, ax, column, name, national):
@@ -100,8 +138,36 @@ class Grapher(object):
         new_column = column[~np.isnan(column)]
         ax.hist(new_column, bins=100)
         ax.axvline(national, color='red')
-        ax.set_title(name, fontsize = 12)
+        # ax.set_title(name, fontsize = 12)
         # ax.set_ylabel('Frequency')
+
+    def _plot_hypo_test(self, ax, null_sample):
+        us_dist = np.array(null_sample)
+        print(us_dist)
+        new_column = self.data[~np.isnan(self.data)]
+
+        samp_mean = np.mean(new_column.to_numpy())
+        samp_std = np.std(new_column.to_numpy())/len(new_column)
+
+        us_mean = np.mean(us_dist)
+        us_std = np.std(us_dist)/len(us_dist)
+
+        null_dist = stats.norm(loc = us_mean, scale = us_std)
+        samp_dist = stats.norm(loc = samp_mean, scale = samp_std)
+        lower = null_dist.ppf(0.025)
+        upper = null_dist.ppf(0.975)
+        diff = 2*np.absolute(us_mean-samp_mean)
+        x_values = np.linspace((us_mean - (diff)), (us_mean + (diff)), 250)
+        null_pdf = null_dist.pdf(x_values)
+        ax.plot(x_values, null_pdf)
+        ax.axvline(samp_mean, color='red', linestyle= '--', linewidth=1, alpha = 0.6)
+        ax.axvline(lower, color='green', linestyle= '--', linewidth=1, alpha = 0.8)
+        ax.axvline(upper, color='green', linestyle= '--', linewidth=1, alpha = 0.8)
+        ax.set_title(self.data.name)
+        cdf_calc = null_dist.cdf(samp_mean)
+        p_value = 1 - cdf_calc
+        print(p_value)
+        # pass
 
 
 
@@ -112,9 +178,10 @@ if __name__ == '__main__':
     industry_data = pd.read_csv('data/mesa_industry_data.csv')
     commute_data = pd.read_csv('data/mesa_commute_data.csv')
     income_data = pd.read_csv('data/mesa_income_benefits_data.csv')
-    vet_data = pd.read_csv('data/mesa_vet_data.csv')
+    vet_data = pd.read_csv('data/ohaver_vets_data.csv')
     internet_data = pd.read_csv('data/mesa_internet_data.csv')
     age_data = pd.read_csv('data/ohaver_age_data.csv')
+    gender_data = pd.read_csv('data/ohaver_gender_data.csv')
 
     econ_df = pd.read_csv('data/econ_var_names.csv')
     social_df = pd.read_csv('data/social_var_names.csv')
@@ -149,6 +216,7 @@ if __name__ == '__main__':
     vet_data = clean_data(vet_data)
     internet_data = clean_data(internet_data)
     age_data = clean_data(age_data)
+    gender_data = clean_data(gender_data)
 
     health_data = clean_columns(health_data, health)
     industry_data = clean_columns(industry_data, industry)
@@ -157,10 +225,38 @@ if __name__ == '__main__':
     vet_data = clean_columns(vet_data, vet_status)
     internet_data = clean_columns(internet_data, internet)
     age_data = clean_columns(age_data, age)
+    gender_data = clean_columns(gender_data, gender)
 
     ## Graph
-    graph_obj = Grapher(age_data, age, 'ohaver_viz/age_viz.png', 13, 1, 20, 10)
+    graph_obj = Grapher(True, gender_data.iloc[:, 9], gender[0], 'mesa_viz/hypothesis_test.png', 1, 1, 10, 10)
     graph = graph_obj.plot_cluster()
+
+
+    # states = ["%.2d" % i for i in range(1, 57)]
+    # states.remove('03')
+    # states.remove('07')
+    # states.remove('14')
+    # states.remove('43')
+    # states.remove('52')
+    result = []
+    for state in states:
+        try:
+            print("trying query")
+            query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}".format(gender[0][0], state)
+            print("trying call")
+            call = requests.get(query).text
+            print("trying clean call")
+            clean_call = ast.literal_eval(call)
+            print("trying isolated_value")
+            isolated_value =  float(clean_call[1][1])
+            print(state, isolated_value)
+            result.append(isolated_value)
+        except:
+            import pdb; pdb.set_trace()
+
+
+
+
 
 
 
@@ -174,11 +270,25 @@ if __name__ == '__main__':
     # plt.savefig('viz/income_viz.png')
     # plt.show()
 
-    # x = internet_data.iloc[:, 10][~np.isnan(internet_data.iloc[:, 10])]
-    # fig = plt.figure(figsize=(20, 12))
+    # x = income_data.iloc[:, 13]
+    # mean = np.mean(x.to_numpy())
+    # std = np.std(x.to_numpy())/(np.sqrt(len(x)))
+    # dist = stats.norm(loc = mean, scale = std)
+    # x_vals = np.linspace(10.4, 11.4, 250)
+    # pdf = dist.pdf(x_vals)
+
+    # means = []
+    # for i in range(1000):
+    #     sample = np.random.choice(x, size=len(x), replace=True)
+    #     means.append(np.mean(sample))
+
+
+    # fig = plt.figure(figsize=(10, 10))
     # ax = fig.add_subplot(1, 1,1)
-    # ax.hist(x[:990], bins = 100)
+    # ax.hist(means, bins = 100)
+    # ax.plot(x_vals, pdf)
     # plt.show()
+
 
 
     
