@@ -117,31 +117,31 @@ class Grapher(object):
         isolated_value =  float(clean_call[1][1])
         return isolated_value
 
-    # def _national_distribution(self, search_term, key="259ba8642bd19b70be7abaee303575bb2435f9e3"):
-    #      '''
-    #     We use an array of states to query the census api on a given search term and return the whole distribution
-    #     '''
-    #     states = ["%.2d" % i for i in range(1, 57)]
-    #     states.remove('03')
-    #     states.remove('07')
-    #     states.remove('14')
-    #     states.remove('43')
-    #     states.remove('52')
-    #     result = []
-    #     for state in states:
-    #         try:
-    #             query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}&key={}".format(search_term, state, key)
-    #             print('querrying')
-    #             call = requests.get(query).text
-    #             print('cleaning')
-    #             clean_call = ast.literal_eval(call)
-    #             print('isolating')
-    #             isolated_value =  float(clean_call[1][1])
-    #             print(state, isolated_value)
-    #             result.append(isolated_value)
-    #         except:
-    #             import pdb; pdb.set_trace()
-    #     return result
+    def _national_distribution(self, search_term, key="259ba8642bd19b70be7abaee303575bb2435f9e3"):
+         '''
+        We use an array of states to query the census api on a given search term and return the whole distribution
+        '''
+        states = ["%.2d" % i for i in range(1, 57)]
+        states.remove('03')
+        states.remove('07')
+        states.remove('14')
+        states.remove('43')
+        states.remove('52')
+        result = []
+        for state in states:
+            try:
+                query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=state:{}&key={}".format(search_term, state, key)
+                print('querrying')
+                call = requests.get(query).text
+                print('cleaning')
+                clean_call = ast.literal_eval(call)
+                print('isolating')
+                isolated_value =  float(clean_call[1][1])
+                print(state, isolated_value)
+                result.append(isolated_value)
+            except:
+                import pdb; pdb.set_trace()
+        return result
 
         
     def plot_cluster(self):

@@ -57,10 +57,8 @@ def var_names_to_file(var_names, file_name):
     pd.DataFrame(var_names).to_csv(file_name, header=False, index=False)
 
 if __name__ == '__main__':
-    # row = '1007,MA,42.3,-72.4,1'
-    # row_w_census = add_census(row)
-
-    ## Census Variable Names
+    
+    
     url = requests.get("https://api.census.gov/data/2017/acs/acs5/profile/variables.html").text
     soup = BeautifulSoup(url, "html.parser")
     table = soup.find('table')

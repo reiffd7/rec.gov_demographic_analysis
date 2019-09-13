@@ -64,10 +64,9 @@ def all_sites_mapper(df, size_metric, factor, color):
         folium map centered on Colorado
     """
     map_osm = folium.Map(location=[39, -105.547222], zoom_start=7)
-
     df.apply(lambda row:folium.CircleMarker(location=[row["FacLat"], row["FacLong"]], 
-                                                  radius=(row[size_metric]/df[size_metric].max())*factor, color = color, fill_color = color, popup=row['Park'])
-                                                 .add_to(map_osm), axis=1)
+                                                    radius=(row[size_metric]/df[size_metric].max())*factor, color = color, fill_color = color, popup=row['Park'])
+                                                    .add_to(map_osm), axis=1)
 
     return map_osm
 
