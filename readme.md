@@ -10,6 +10,8 @@
 9. [Conclusion](#conclusion)
 10. [Sources](#sources)
 
+![intro](/presentation_images/rec_image.png)
+
 ## Overview
 
 Every year, recreation.gov records every reservation on their site. These records contain information about each campsite/tour and some information about each customer. Specifically, each customer's state and zipcode are included. 
