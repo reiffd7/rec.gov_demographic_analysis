@@ -1,15 +1,18 @@
 # Recreation.gov Demographic Analysis
 1. [Overview](#overview)
 2. [The Process](#the-process)
-3. [Data Pipeline](#data-pipeline)
-4. [Graph Class](#graph-class)
-5. [EDA](#eda)
-
+3. [Amazon AWS](#amazon-aws)
+4. [Data Pipeline](#data-pipeline)
+5. [Graph Class](#graph-class)
+6. [EDA](#eda)
+7. [Mesa Verde National Park](#mesa-verde-national-park)
+8. [O'Haver Lake](#ohaver-lake)
 
 ## Overview
 
-Every year, recreation.gov records every reservation on their site. These records contain information about each campsite/tour and some information about each customer. Specifically, each customer's state and zipcode are included. <br>
-Goals <br>
+Every year, recreation.gov records every reservation on their site. These records contain information about each campsite/tour and some information about each customer. Specifically, each customer's state and zipcode are included. 
+
+<br>**Goals** <br>
 <li>Improve the recreation.gov product through a demographic analysis of their customers</li>
 <li>Develop a pipeline that creates a database of census variables for a zip code </li>
 
@@ -52,11 +55,17 @@ For each cluster, I queried the census.gov api across all customer zip codes for
 
 I started with a little more than 1 million rows of reservation data from https://ridb.recreation.gov/download. I used docker and sparkbook to gather the columns I wanted to use (Site name, location & Customer location) for sites in Colorado and customers in the United States. Next, I cleaned the zipcodes and found corresponding Lat/Long points for each zipcode which would allow me to query the census api. 
 
-I pushed this new dataset to Amazon S3 so that I could access the data on an Amazon EC2 instance and quickly query the api for each site and each census variable cluster. I opened a Amazon EC2 instance with twice as much memory and CPUs as my computer. I installed Docker and Sparkbook on the cloud and mapped my localhost:8881 to my instance's localhost:8881. With faster computation times, more census variables could be accessed across more zipcodes in a realistic time frame. I subdivided colorado sites into Mesa Verde National Park and O'Haver Lake, and collected data across census clusters. I pushed the new data to GitHub, pulled it into visualzation.py and graphed it using my Grapher class. 
+I pushed this new dataset to Amazon S3 so that I could access the data on an Amazon EC2 instance and quickly query the api for each site and each census variable cluster. I opened a Amazon EC2 instance with much more memory and CPUs than my computer. I installed Docker and Sparkbook on the cloud and mapped my localhost:8881 to my instance's localhost:8881. With faster computation times, more census variables could be accessed across more zipcodes in a realistic time frame. I subdivided colorado sites into Mesa Verde National Park and O'Haver Lake, and collected data across census clusters. I pushed the new data to GitHub, pulled it into visualzation.py and graphed it using my Grapher class. 
+
+## Amazon AWS
+
+This project could not have happened without AWS. Early in my dataset creation process, I was paralized by slow computation when querying the census api for multiple sites. AWS came to the rescue, providing powerful tools for me to produce census data for multiple sites. I used the c4.8xlarge EC2 instance which provided me with 36 CPUs and 60 GiB of memory. On the instance, I installed Docker and Apache Spark which allowed me to maneuver my data. 
+
+AWS drastically sped up the dataset generation portion of my project and allowed more time for anlaysis. It also created a great workflow where I would be generating data on the cloud and visualizing/statistically analyzing on my local machine while syncing up both sides with GitHub. 
 
 ## Data Pipeline
 
-Each census cluster dataset was created using Apache Spark. This method was chosen due to a couple import characteristics of RDDs (Resilient Distributed Datasets)
+Each census cluster dataset was created using Apache Spark. This method was chosen due to a couple important characteristics of RDDs (Resilient Distributed Datasets)
 <li> RDDs can recover from errors</li>
 <li> RDDs are immutable </li>
 <li> RDDs are lazily evaluated </li>
@@ -88,6 +97,16 @@ def call_api(search_term, row):
     try:
         call = requests.get(query).text
      ...
+def export(df, fname, bucket):
+    """
+    Input: 
+        pandas dataframe  of a site's customer information with additional columns for each cluster variable
+    Output:
+        No output. The data is exported to s3 and csv
+    """
+    to_export = fname
+    df.to_csv(to_export, header=True, index=True)
+    s3_client.upload_file(to_export, bucket, to_export)
 ```
 Large census api calls were made on each row. If an error was made in a single api call, it could have compromised my entire dataset. RDDs allowed me to fix errors before I ruined my whole dataset due to their immutable nature. I put together functions to call the api, but lazy evaluation allowed me to correct mistakes before they actually happened. 
 
