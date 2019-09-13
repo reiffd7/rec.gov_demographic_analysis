@@ -214,7 +214,7 @@ Gender          |  Race
 
 It appears that the people who are visiting O'Haver Lake are whiter and more male than the national average.  <br>
 But, what we can do with this is limited.. 
-Do white men love this campsite or do Coloradans love this campsite (its the same thing haha)? Remember most of its visitors are from Colorado. 
+Is there something about this campsite that attracts white men or is there something about the campsite that attracts Coloradans? Remember most of its visitors are from Colorado. 
 
 
 ## Conclusion
