@@ -172,7 +172,8 @@ class Grapher(object):
         ax.hist(new_column, bins=100)
         ax.axvline(national, color='red')
         ax.set_title(name, fontsize = 12)
-        # ax.set_ylabel('Frequency')
+        ax.set_ylabel('Frequency')
+        ax.set_xlabel('Percentage of Population')
 
     def _plot_hypo_test(self, ax, null_sample):
         '''
@@ -278,7 +279,7 @@ if __name__ == '__main__':
     race_data = clean_columns(race_data, race, 4)
 
     ## Graph
-    graph_obj = Grapher(True, commute_data.iloc[:, 11], commute[2], 'mesa_viz/hypothesis_test_public_transportation.png', 1, 1, 10, 10)
+    graph_obj = Grapher(False, internet_data.iloc[:, 9:], internet, 'mesa_viz/internet_viz.png', 1, 2, 20, 10)
     graph = graph_obj.plot_cluster()
 
 

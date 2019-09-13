@@ -3,6 +3,7 @@
 2. [The Process](#the-process)
 3. [Data Pipeline](#data-pipeline)
 4. [Graph Class](#graph-class)
+5. [EDA](#eda)
 
 
 ## Overview
@@ -139,3 +140,57 @@ class Grapher(object):
        ...
 ```
 The grapher class takes in a site's sample poulation for a cluster, the cluster name, and graph characteristics and can provide the user with a histogram of census variables or a hypothesis test for a single census variable. In the class we tie in national averages for census variables to plot on histograms and national distributions for census variables to plot a hypothesis test. This class provides quick statistical analysis and I predict it will be reusable for more EDAs. 
+
+
+## EDA
+
+Customer Distance Traveled             |  Total Reservations
+:-------------------------:|:-------------------------:
+![](presentation_images/cust_dist1.png)  |  ![](presentation_images/res_size.png)
+
+
+In deciding which campsites to further investigate, I considered a few factors. First, I wanted a campsite with a diverse clientele in terms of distance from the campsite. Clients from all over the country. Data generation also had to be kept in mind. Therefore, I also wanted a campsite with fewer reservations than normal, so I could collect a good amount of data to analyze. I settled on Mesa Verde National Park and O'Haver Lake. 
+
+## Mesa Verde National Park          
+
+![](presentation_images/mesa_verde.jpg)  
+
+Mesa Verde had over 1,000 reservations and customers from all over the country
+
+![](presentation_images/mesa_map.png)  
+
+Overall, it was difficult to come to any conclusions based on the census data of Mesa Verde's clientele...
+
+![](mesa_viz/internet_viz.png)  
+
+I did have some questions:
+<li> Did Mesa Verde's customers from places where people walked to work more often than national average? </li>
+<li> What about public transportation? If people were using public transportation more than national average in these locations across the country, this could be a good advertising opportunity </li>
+
+Walk          |  Public transportation 
+:-------------------------:|:-------------------------:
+![](mesa_viz/hypothesis_test_walk.png)  |  ![](mesa_viz/hypothesis_test_public_transportation.png)
+
+
+## O'Haver Lake
+
+![](presentation_images/ohaver1.jpg)  
+
+O'Haver Lake had around 200 and customers mainly from Colorado
+
+![](presentation_images/ohaver_map.png)  
+
+Maybe we can make some conclusions... 
+
+![](ohaver_viz/gender_viz.png)  
+
+![](ohaver_viz/race_viz.png) 
+
+Gender          |  Race 
+:-------------------------:|:-------------------------:
+![](ohaver_viz/hypothesis_test_gender.png)  |  ![](ohaver_viz/hypothesis_test_white.png)
+
+It appears that the people who are visiting O'Haver Lake are whiter and more male than the national average.  <br>
+But, what we can do with this is limited.. 
+Do white men love this campsite or do Coloradans love this campsite? Remember most of its visiters are from Colorado. 
+
