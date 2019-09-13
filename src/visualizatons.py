@@ -118,9 +118,6 @@ class Grapher(object):
         return isolated_value
 
     def _national_distribution(self, search_term, key="259ba8642bd19b70be7abaee303575bb2435f9e3"):
-         '''
-        We use an array of states to query the census api on a given search term and return the whole distribution
-        '''
         states = ["%.2d" % i for i in range(1, 57)]
         states.remove('03')
         states.remove('07')
@@ -168,6 +165,7 @@ class Grapher(object):
 
     def _plot_hist(self, ax, column, name, national):
         ## no Nan values
+        print(column)
         new_column = column[~np.isnan(column)]
         ax.hist(new_column, bins=100)
         ax.axvline(national, color='red')
@@ -225,7 +223,7 @@ if __name__ == '__main__':
     industry_data = pd.read_csv('data/mesa_industry_data.csv')
     commute_data = pd.read_csv('data/mesa_commute_data.csv')
     income_data = pd.read_csv('data/mesa_income_benefits_data.csv')
-    vet_data = pd.read_csv('data/ohaver_vets_data.csv')
+    vet_data = pd.read_csv('data/mesa_vet_data.csv')
     internet_data = pd.read_csv('data/mesa_internet_data.csv')
     age_data = pd.read_csv('data/ohaver_age_data.csv')
     gender_data = pd.read_csv('data/ohaver_gender_data.csv')
@@ -269,17 +267,24 @@ if __name__ == '__main__':
     race_data = clean_data(race_data)
 
     health_data = clean_columns(health_data, health, 3)
-    industry_data = clean_columns(industry_data, industry, 3)
+    # industry_data = clean_columns(industry_data, industry, 3)
     commute_data = clean_columns(commute_data, commute, 3)
-    income_data = clean_columns(income_data, income_benefits, 3)
+    
     vet_data = clean_columns(vet_data, vet_status, 3)
     internet_data = clean_columns(internet_data, internet, 3)
     age_data = clean_columns(age_data, age, 3)
     gender_data = clean_columns(gender_data, gender, 3)
     race_data = clean_columns(race_data, race, 4)
 
+
+    
+
     ## Graph
-    graph_obj = Grapher(False, gender_data.iloc[:, 9:], gender, 'ohaver_viz/gender_viz.png', 1, 2, 20, 10)
-    graph = graph_obj.plot_cluster()
+    # graph_obj = Grapher(False, industry_data.iloc[:, 9:], industry, 'mesa_viz/industry.png', 13, 1, 20, 10)
+    # graph = graph_obj.plot_cluster()
 
 
+    
+
+
+   

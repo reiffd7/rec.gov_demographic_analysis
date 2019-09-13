@@ -183,6 +183,8 @@ Mesa Verde had over 1,000 reservations and customers from all over the country
 
 Overall, it was difficult to come to any conclusions based on the census data of Mesa Verde's clientele...
 
+![](mesa_viz/industry1.png)  
+
 ![](mesa_viz/internet_viz.png)  
 
 I did have some questions:
