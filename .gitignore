@@ -1,0 +1,8 @@
+# .gitignore
+data/
+ipynb_checkpoints/
+__pycache__
+.DS_Store
+src/.ipynb_checkpoints/
+src/__pycache__
+
