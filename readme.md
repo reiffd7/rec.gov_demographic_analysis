@@ -7,6 +7,7 @@
 6. [EDA](#eda)
 7. [Mesa Verde National Park](#mesa-verde-national-park)
 8. [O'Haver Lake](#ohaver-lake)
+9. [Conclusion](#conclusion)
 
 ## Overview
 
