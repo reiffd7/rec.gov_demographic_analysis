@@ -90,7 +90,7 @@ def site_customer_mapper(df, popup):
     return map_osm
 
 
-def add_census_data(df):
+def add_census_tract(df):
     """
     Input: 
         df (dataframe): pandas dataframe characterizing the site w/ columns: CustZIP, CustState, CustLat, CustLong, ResSize
@@ -109,7 +109,7 @@ def add_census_data(df):
 
 
 
-def rdd_to_data(census_data, cluster):
+def add_census_data(census_data, cluster):
     """
     Input: 
         numpy array of a site's customer information including census tract, state number, and county number

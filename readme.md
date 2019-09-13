@@ -80,12 +80,20 @@ spark = ps.sql.SparkSession.builder \
 sc = spark.sparkContext
 
 ## Data Pipeline
-def add_census_data(df):
+def add_census_tract(df):
     nparr = df.to_numpy()
     rdd = sc.parallelize(nparr)\
         .map(lambda row: row.tolist())\
         .map(lambda row: ap.add_census(row))
     ...
+
+def add_census_data(census_data, cluster):
+    rdd = sc.parallelize(census_data)\
+        .map(lambda row: row.tolist())\
+        .map(lambda row: ap.add_census_vars(row, cluster))
+    ...
+
+
 def add_census_vars(row, var_names):
     for i in range(len(var_names)):
         search_term = var_names[i][0]
@@ -99,12 +107,6 @@ def call_api(search_term, row):
         call = requests.get(query).text
      ...
 def export(df, fname, bucket):
-    """
-    Input: 
-        pandas dataframe  of a site's customer information with additional columns for each cluster variable
-    Output:
-        No output. The data is exported to s3 and csv
-    """
     to_export = fname
     df.to_csv(to_export, header=True, index=True)
     s3_client.upload_file(to_export, bucket, to_export)
