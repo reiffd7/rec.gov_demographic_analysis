@@ -7,6 +7,7 @@ import requests
 import ast
 import random
 from scipy import stats
+import seaborn as sns
 
 plt.style.use('fivethirtyeight')
 
@@ -50,7 +51,7 @@ def clean_columns(frame, cluster, index):
             frame : dataframe with renamed columns 
         
         '''
-    frame = frame.rename(columns={cluster[i-8][1]: cluster[i-8][1].split('!!')[index].replace(' ', '_') for i in range(8, 8+len(cluster))})
+    frame = frame.rename(columns={cluster[i-8][1]: cluster[i-8][1].split('!!')[index] for i in range(8, 8+len(cluster))})
     return frame
 
 
@@ -76,8 +77,9 @@ class Grapher(object):
 
     '''
     
-    def __init__(self, hypo_test, data, cluster, fname, fig_rows, fig_cols, size_x, size_y):
+    def __init__(self, hypo_test, graph_type, data, cluster, fname, fig_rows, fig_cols, size_x, size_y):
         self.hypo_test = hypo_test
+        self.graph_type = graph_type
         self.data = data
         self.cluster = cluster
         self.fname = fname
@@ -156,22 +158,34 @@ class Grapher(object):
             plt.show()
         else:
             national_mean = self._national_means()
-            print(national_mean)
-            for i in range(0, len(self.data.columns)):
-                self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i+1), self.data.iloc[:, i], self.data.columns[i], national_mean[i])
-            plt.savefig(self.fname)
-            plt.show()
+            # print(national_mean)
+            if self.graph_type == 'hist':
+                for i in range(0, len(self.data.columns)):
+                    if graph_type == 'hist':
+                        self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i+1), self.data.iloc[:, i], self.data.columns[i], national_mean[i])
+                plt.savefig(self.fname)
+                plt.show()
+            elif self.graph_type == 'box':
+                self._plot_box()
+                plt.tight_layout()
+                plt.savefig(self.fname)
+                plt.show()
 
 
     def _plot_hist(self, ax, column, name, national):
         ## no Nan values
-        print(column)
+        # print(column)
         new_column = column[~np.isnan(column)]
         ax.hist(new_column, bins=100)
         ax.axvline(national, color='red')
         ax.set_title(name, fontsize = 12)
         ax.set_ylabel('Frequency')
         ax.set_xlabel('Percentage of Population')
+    
+    def _plot_box(self):
+        bplot = sns.boxplot(data=self.data, orient="h", width=0.5, palette="colorblind")
+        return bplot
+    
 
     def _plot_hypo_test(self, ax, null_sample):
         '''
@@ -267,9 +281,10 @@ if __name__ == '__main__':
     race_data = clean_data(race_data)
 
     health_data = clean_columns(health_data, health, 3)
-    # industry_data = clean_columns(industry_data, industry, 3)
+    industry_data = clean_columns(industry_data, industry, 3)
     commute_data = clean_columns(commute_data, commute, 3)
-    
+    income_data = clean_columns(income_data, income_benefits, 3)
+
     vet_data = clean_columns(vet_data, vet_status, 3)
     internet_data = clean_columns(internet_data, internet, 3)
     age_data = clean_columns(age_data, age, 3)
@@ -280,10 +295,15 @@ if __name__ == '__main__':
     
 
     ## Graph
-    # graph_obj = Grapher(False, industry_data.iloc[:, 9:], industry, 'mesa_viz/industry.png', 13, 1, 20, 10)
+    # graph_obj = Grapher(False, 'box', age_data.iloc[:, 9:], age, 'ohaver_viz/age_box.png', 1, 1, 20, 10)
     # graph = graph_obj.plot_cluster()
 
-
+    fig, bplot = plt.subplots(figsize=(15, 10))
+    bplot = sns.boxplot(data=income_data.iloc[:, 9:], orient="h", width=0.5, palette="colorblind")
+    bplot.axvline(x = 10, ymin = 1, ymax = 2)
+    # plt.setp(bplot.get_xticklabels(), rotation=45)
+    plt.tight_layout()
+    plt.show()
     
 
 

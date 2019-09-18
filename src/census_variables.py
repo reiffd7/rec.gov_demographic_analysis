@@ -21,7 +21,7 @@ def parse_table_to_data(table):
     return np.array(data)
 
 
-def filter_subset_data(census_vars, subset):
+def filter_subset_data(geography, census_vars, subset):
     """
     Input:
         census_var_names (np array): a multi-dimensional array of all census variables
@@ -29,8 +29,12 @@ def filter_subset_data(census_vars, subset):
     Output:
         subset_vars : a multi-dimensional array representing census variables of a subset
     """
-    subset_vars = census_vars[census_vars[:,2] == subset]
-    return subset_vars
+    if geography:
+        subset_vars = census_vars[census_vars[:,1] == subset]
+        return subset_vars[:,:2]
+    else:
+        subset_vars = census_vars[census_vars[:,2] == subset]
+        return subset_vars
 
 def filter_percentages(census_vars):
     """
@@ -47,13 +51,13 @@ def filter_percentages(census_vars):
     return np.array(result)
 
 def var_names_to_file(var_names, file_name):
-     """
-    Input:
-        var_names (np array): a multi-dimensional array of census variables
-        file_name (str): name of the file to be exported
+    #  """
+    # Input:
+    #     var_names (np array): a multi-dimensional array of census variables
+    #     file_name (str): name of the file to be exported
         
-    Output: (None)
-    """
+    # Output: (None)
+    # """
     pd.DataFrame(var_names).to_csv(file_name, header=False, index=False)
 
 if __name__ == '__main__':
@@ -64,8 +68,7 @@ if __name__ == '__main__':
     table = soup.find('table')
     census_var_names = parse_table_to_data(table)[:, 0:3]
 
-    subset = 'ACS DEMOGRAPHIC AND HOUSING ESTIMATES'
-    demographic_vars = filter_subset_data(census_var_names, subset)
-    demographic_percent_vars = filter_percentages(demographic_vars)
-
+    subset = 'Geography'
+    geographic_vars = filter_subset_data(True, census_var_names, subset)
+    var_names_to_file(geographic_vars, 'geo_var_names.csv')
     
