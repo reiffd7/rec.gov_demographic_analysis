@@ -1,7 +1,7 @@
 # Recreation.gov Demographic Analysis
 1. [Overview](#overview)
 2. [The Data](#the-data)
-2. [Data Wrangling Process](#data-wrangling-process)
+2. [The Data Wrangling Process](#the-data-wrangling-process)
 3. [Amazon AWS](#amazon-aws)
 4. [Data Pipeline](#data-pipeline)
 5. [Graph Class](#graph-class)
@@ -67,7 +67,7 @@ I worked to tie in census data and get the data in more digestible form for each
 ![census_api_call](/presentation_images/census_api_call.png)
 
 
-## The Process
+## The Data Wrangling Process
 
 ![Workflow](/presentation_images/rec_demographics.png)
 
