@@ -161,8 +161,7 @@ class Grapher(object):
             # print(national_mean)
             if self.graph_type == 'hist':
                 for i in range(0, len(self.data.columns)):
-                    if graph_type == 'hist':
-                        self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i+1), self.data.iloc[:, i], self.data.columns[i], national_mean[i])
+                    self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i+1), self.data.iloc[:, i], self.data.columns[i], national_mean[i])
                 plt.savefig(self.fname)
                 plt.show()
             elif self.graph_type == 'box':
@@ -212,7 +211,7 @@ class Grapher(object):
         null_pdf = null_dist.pdf(us_x_values)
         samp_pdf = samp_dist.pdf(samp_x_values)
         cdf_calc = null_dist.cdf(samp_mean)
-        p_value = round((1 - cdf_calc), 2)
+        p_value = round((1 - cdf_calc), 5)
         p_string = "p_value = {}".format(p_value)
         ax.plot(us_x_values, null_pdf, label = 'Null Distribution (entire US)', color = 'red')
         ax.plot(samp_x_values, samp_pdf, label = 'Sample Distribution', color = 'blue')
@@ -295,15 +294,15 @@ if __name__ == '__main__':
     
 
     ## Graph
-    # graph_obj = Grapher(False, 'box', age_data.iloc[:, 9:], age, 'ohaver_viz/age_box.png', 1, 1, 20, 10)
-    # graph = graph_obj.plot_cluster()
+    graph_obj = Grapher(False, 'hist', age_data.iloc[:, 18:], age[9:], 'ohaver_viz/old_age.png', 4, 1, 20, 10)
+    graph = graph_obj.plot_cluster()
 
-    fig, bplot = plt.subplots(figsize=(15, 10))
-    bplot = sns.boxplot(data=income_data.iloc[:, 9:], orient="h", width=0.5, palette="colorblind")
-    bplot.axvline(x = 10, ymin = 1, ymax = 2)
-    # plt.setp(bplot.get_xticklabels(), rotation=45)
-    plt.tight_layout()
-    plt.show()
+    # fig, bplot = plt.subplots(figsize=(15, 10))
+    # bplot = sns.boxplot(data=income_data.iloc[:, 9:], orient="h", width=0.5, palette="colorblind")
+    # bplot.axvline(x = 10, ymin = 1, ymax = 2)
+    # # plt.setp(bplot.get_xticklabels(), rotation=45)
+    # plt.tight_layout()
+    # plt.show()
     
 
 

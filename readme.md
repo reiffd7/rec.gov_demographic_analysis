@@ -1,9 +1,11 @@
 # Recreation.gov Demographic Analysis
 1. [Overview](#overview)
-2. [The Process](#the-process)
+2. [The Data](#the-data)
+2. [Data Wrangling Process](#data-wrangling-process)
 3. [Amazon AWS](#amazon-aws)
 4. [Data Pipeline](#data-pipeline)
 5. [Graph Class](#graph-class)
+5. [The Statistical Analysis Process](#the-statistical-analysis-process)
 6. [EDA](#eda)
 7. [Mesa Verde National Park](#mesa-verde-national-park)
 8. [O'Haver Lake](#ohaver-lake)
@@ -17,7 +19,8 @@
 Every year, recreation.gov records every reservation on their site. These records contain information about each campsite/tour and some information about each customer. Specifically, each customer's state and zipcode are included. 
 
 <br>**Goals** <br>
-<li>Improve the recreation.gov product through a demographic analysis of their customers</li>
+<li> Improve the recreation.gov product through a demographic analysis of their customers </li>
+<li> Identify census variables for site populations that are statistically significant from national average </li>
 <li>Develop a pipeline that creates a database of census variables for a zip code </li>
 
 
@@ -51,6 +54,18 @@ To attack this question, I looked at two campsites in Colorado, Mesa Verde Natio
 
 For each cluster, I queried the census.gov api across all customer zip codes for each site. For each variable, I graphed my sample distribution against national average. For select variables, I conducted a hypothesis test to gain insight into the customer base for each sight. 
 
+## The Data
+
+I started with data in reservations.csv. The data contained more than 1 million rows and 57 features:
+
+![data_columns](/presentation_images/data_coumns.png)
+
+I worked to tie in census data and get the data in more digestible form for each census cluster.
+
+![data_in_form](/presentation_images/data.png)
+
+![census_api_call](/presentation_images/census_api_call.png)
+
 
 ## The Process
 
@@ -69,102 +84,37 @@ AWS drastically sped up the dataset generation portion of my project and allowed
 
 ## Data Pipeline
 
+I used a functional programming paradigm in conjunction for my data pipeline. I would sequentially add a census tract for each customer zip, add census data for a cluster, and finally export the data to csv and Amazon S3. The add census data for a cluster step was a bit layered. In this step I would call a "call api" script where for each census variable in the cluster, I would call another function that would actually make the call to the census api.
+
 Each census cluster dataset was created using Apache Spark. This method was chosen due to a couple important characteristics of RDDs (Resilient Distributed Datasets)
 <li> RDDs can recover from errors</li>
 <li> RDDs are immutable </li>
 <li> RDDs are lazily evaluated </li>
 
-```python
-spark = ps.sql.SparkSession.builder \
-            .master("local[4]") \
-            .appName("case study") \
-            .getOrCreate()
-
-sc = spark.sparkContext
-
-## Data Pipeline
-def add_census_tract(df):
-    nparr = df.to_numpy()
-    rdd = sc.parallelize(nparr)\
-        .map(lambda row: row.tolist())\
-        .map(lambda row: ap.add_census(row))
-    ...
-
-def add_census_data(census_data, cluster):
-    rdd = sc.parallelize(census_data)\
-        .map(lambda row: row.tolist())\
-        .map(lambda row: ap.add_census_vars(row, cluster))
-    ...
-
-
-def add_census_vars(row, var_names):
-    for i in range(len(var_names)):
-        search_term = var_names[i][0]
-        row.append(call_api(search_term, row))
-    ...
-
-def call_api(search_term, row):
-    tract, state, county = row[5], row[6], row[7]
-    query = "https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{}&for=tract:{}&in=state:{}%20county:{}&key={}".format(search_term, tract, state, county, key)
-    try:
-        call = requests.get(query).text
-     ...
-def export(df, fname, bucket):
-    to_export = fname
-    df.to_csv(to_export, header=True, index=True)
-    s3_client.upload_file(to_export, bucket, to_export)
-```
 Large census api calls were made on each row. If an error was made in a single api call, it could have compromised my entire dataset. RDDs allowed me to fix errors before I ruined my whole dataset due to their immutable nature. I put together functions to call the api, but lazy evaluation allowed me to correct mistakes before they actually happened. 
 
 
 ## Graph Class
 
-Once, the data creation process finished, I needed a way to statistically analyze my sample population against national average. 
+Once, the data creation process finished, I needed a systematic way to statistically analyze my sample population against national average. 
 
-```python
-class Grapher(object):
-    
-    
-    def __init__(self, hypo_test, data, cluster, fname, fig_rows, fig_cols, size_x, size_y):
-        self.hypo_test = hypo_test
-        self.data = data
-        self.cluster = cluster
-        self.fname = fname
-        self.fig_rows = fig_rows
-        self.fig_cols = fig_cols
-        self.size_x = size_x
-        self.size_y = size_y 
-        
-    def _national_means(self):
-       ...
-    
-    def _national_call_api(self, search_term, ):
-       ...
+The grapher class takes in a site's sample poulation for a cluster, the cluster name, and graph characteristics and can provide the user with a histogram of census variables, a boxplot of census variables, or a hypothesis test for a single census variable. In the class we tie in national averages for census variables to plot on histograms and national distributions for census variables to plot a hypothesis test. This class provides quick statistical analysis and I predict it will be reusable for more EDAs. 
 
-    def _national_distribution(self, search_term):
-       ...
+## The Statistical Analysis Process 
 
-        
-    def plot_cluster(self):
-        fig = plt.figure(figsize=(self.size_x, self.size_y))
-        if self.hypo_test:
-            null_sample = self._national_distribution(search_term)
-            self._plot_hypo_test(fig.add_subplot(self.fig_rows, self.fig_cols, 1), null_sample)
-            ...
-        else:
-            national_mean = self._national_means()
-            print(national_mean)
-            for i in range(0, len(self.data.columns)):
-                self._plot_hist(fig.add_subplot(self.fig_rows, self.fig_cols, i+1), self.data.iloc[:, i], self.data.columns[i], national_mean[i])
-            ...
+To begin, I would look at a boxplot characterizing the sample population for a given census cluster. Here is age for example:
 
-    def _plot_hist(self, ax, column, name, national):
-       ...
+![age_box](/ohaver_viz/age_box.png)
 
-    def _plot_hypo_test(self, ax, null_sample):
-       ...
-```
-The grapher class takes in a site's sample poulation for a cluster, the cluster name, and graph characteristics and can provide the user with a histogram of census variables or a hypothesis test for a single census variable. In the class we tie in national averages for census variables to plot on histograms and national distributions for census variables to plot a hypothesis test. This class provides quick statistical analysis and I predict it will be reusable for more EDAs. 
+This gives us some insight into the sample population with median, 25%, 75%, max, min, and outliers. However, it does not give us its significance vs. national average.
+
+![age_national_average](/ohaver_viz/old_age.png)
+
+This graph is messy and tough to analyze for any given age. So we hypothesis test specific ages. 
+
+![hypothesis_test](/ohaver_viz/age_hypo.png)
+
+
 
 
 ## EDA
